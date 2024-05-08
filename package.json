@@ -1,0 +1,19 @@
+{
+  "name": "reference",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "client-dev": "tsx --watch src/client",
+    "server-dev": "tsx --watch src/server",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "20.12.10",
+    "express": "4.19.2",
+    "tsx": "4.9.3",
+    "typescript": "5.4.5"
+  }
+}
