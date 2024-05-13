@@ -1,6 +1,6 @@
 export enum UDP_STATE {
-    UDP_STATE_READY = 'ready',
-    UDP_STATE_ERROR = 'error'
+    UDP_STATE_READY = 'udp_state_ready',
+    UDP_STATE_ERROR = 'udp_state_error'
 }
 
 export const UDP_BROADCAST_ADDRESS = '255.255.255.255';

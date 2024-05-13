@@ -1,13 +1,22 @@
+import { udpClientService } from "../udp.client";
+import { TRPCRandomNumberArgs } from "./types";
+
 const FUNCTION_RANDOMIZATION_PROBABILITY = 0.75;
+
+
+const RPC_METHOD_PREFIX = 'RPC' as const;
+const RPC_RANDOM_DEFAULT_MIN = 0;
+const RPC_RANDOM_DEFAULT_MAX = 100;
 
 class RPCClientService {
     #capacities: string[] = [];
     constructor(){
         this.#init();
     }
+
     #init(){
         const rpcFunctions = Object.getOwnPropertyNames(Object.getPrototypeOf(this))
-                                .filter((fName) => fName.startsWith('rpc'));
+                                .filter((fName) => fName.startsWith(RPC_METHOD_PREFIX));
         
         // randomize exposed capacities
         for (let i = 0; i < rpcFunctions.length; i++) {
@@ -16,22 +25,38 @@ class RPCClientService {
                 this.#capacities.push(rpcFunctions[fnIndex]);
             }
         }
-        console.log(this.#capacities)
+
+        udpClientService.addMessageHandler('callfunction', (payload, sender) => {
+            const [ remoteFunctionName, functionArgs ] = payload;
+            return this.callRpcFunction.call(this, remoteFunctionName, functionArgs);
+        })
+        console.log(this.capacities)
     }
 
     get capacities(): string[]{
-        return this.#capacities;
+        return this.#capacities.map(capName => capName.replace(`${RPC_METHOD_PREFIX}`, ''));
     }
 
-    rpcRandomNumber(){
+    callRpcFunction(functionName: string, args: any){
+        const normalizedFunctionName = RPC_METHOD_PREFIX + functionName;
+        if (!this.#capacities.includes(normalizedFunctionName)) throw new Error('unknown function');
+        const handlerFunction = (this as unknown as Record<string, Function>)[normalizedFunctionName];
+        console.log({ handlerFunction, normalizedFunctionName })
+        console.log({ args })
+        return handlerFunction.call(this, args)
+    }
+
+    RPCrandomNumber(fnArgs: TRPCRandomNumberArgs){
+        const { min, max } = { min: RPC_RANDOM_DEFAULT_MIN, max: RPC_RANDOM_DEFAULT_MAX, ...fnArgs};
+        if (min > max) throw new Error('Min is greater than max')
+        return Math.trunc(Math.random() * max + min);
+    }
+
+    RPChddSpeed(){
 
     }
 
-    rpcGetHddSpeed(){
-
-    }
-
-    rpcGetFreeMem(){
+    RPCclientFreeMemory(){
         
     }
 }

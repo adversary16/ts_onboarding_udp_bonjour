@@ -1,21 +1,61 @@
-import { UUID } from "crypto";
 import { RemoteInfo } from "dgram";
+import { UDP_BEACON_TIMEOUT_MSEC } from "../../../client/services/udp.client/constants";
 import { UDPService } from "../../../shared/classes/udp.class";
+import { TClientId, TUDPHeartbeatPayload, TUDPHelloPayload } from "../../../shared/types";
+import { TClientInfo } from "./types";
 
-class UDPServerService extends UDPService{
-    #clients = new Map<string, any>()
+class UDPServerService extends UDPService {
+    #clients = new Map<string, TClientInfo>()
     constructor(){
         super();
-        this.#init()
+        this.on(UDPService.STATES.UDP_STATE_READY, this.#init.bind(this))
+    }
+
+    get clients(): any[] {
+        const clientDTO = <any>[]
+        for (const [id, { capacities }] of this.#clients) {
+            clientDTO.push({ id, capacities })
+        }
+        return clientDTO; 
     }
 
     #init(){
-        this.on('hello', this.#registerClient.bind(this));
+        this.addMessageHandler('HELLO', this.#registerClient.bind(this));
+        this.addMessageHandler('HEARTBEAT', this.#updateHeartBeat.bind(this));
+        setInterval(this.#cleanup.bind(this), UDP_BEACON_TIMEOUT_MSEC)
     }
 
-    #registerClient(clientID: UUID, clientRemoteInfo: RemoteInfo){
+    #registerClient(registrationPayload: TUDPHelloPayload, sender: RemoteInfo):void {
         const timestamp = Date.now();
-        console.log({ timestamp})
+        const { clientId, capacities } = registrationPayload;
+        this.#clients.set(clientId, { ...sender, capacities, lastHeartbeat: timestamp})
+        console.log('Client with', clientId, 'connected from', sender.address)
+    }
+
+    #updateHeartBeat(heartbeatPayload: TUDPHeartbeatPayload, clientRemoteInfo: RemoteInfo): void {
+        const { clientId } = heartbeatPayload;
+        const clientConnection = this.#clients.get(clientId);
+        if (!clientConnection || clientConnection.address !== clientRemoteInfo.address) throw new Error('RECONNECTION_REQUIRED');
+        clientConnection.lastHeartbeat = Date.now();    
+    }
+    
+    #cleanup(){
+        const timestamp = Date.now();
+        for (const [k, v] of this.#clients) {
+            if ((timestamp - v.lastHeartbeat) > UDP_BEACON_TIMEOUT_MSEC ) {
+                this.#clients.delete(k);
+                console.log('Client with', k, 'was purged for timeout')
+            }
+        }
+    }
+
+    callRPCFunction(clientId: TClientId, functionName: string, args: any){
+        const calledClient = this.#clients.get(clientId);
+        if (!calledClient) throw new Error('No such client');
+        if (!calledClient.capacities.includes(functionName)) throw new Error('No such function');
+        const { address, port } = calledClient;
+        return this.callRemoteFunction(address, port, functionName, args)
+        // const result = this.callRemoteFunction()
     }
 }
 

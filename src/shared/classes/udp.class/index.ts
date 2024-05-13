@@ -2,8 +2,8 @@ import { randomUUID } from "crypto";
 import { RemoteInfo, createSocket } from "dgram";
 import EventEmitter from "events";
 import { UDP_SERVICE_SERVER_PORT, UDP_SERVICE_SOCKET_TYPE } from "../../config";
-import { UDP_BROADCAST_ADDRESS, UDP_STATE } from "../../constants";
-import { TClientId, TUDPMessage, TUDPMessageType, isValidMessage } from "../../types";
+import { UDP_BROADCAST_ADDRESS, UDP_RPC_TIMEOUT_MSEC, UDP_STATE } from "../../constants";
+import { TMessageID, TUDPMessage, TUDPMessageEventPayload, TUDPMessageHandler, TUDPMessageType, isValidMessage } from "../../types";
 
 export class UDPService extends EventEmitter {
     static STATES = UDP_STATE;
@@ -21,7 +21,7 @@ export class UDPService extends EventEmitter {
         try {
             this.#init(listenPort)
         } catch (error: any) {
-            this.emit(UDPService.STATES.UDP_STATE_ERROR, { message: error?.message ?? error });
+            this.emit<Map<string, TUDPMessage>>(UDPService.STATES.UDP_STATE_ERROR, { message: error?.message ?? error });
         }
     }
 
@@ -31,14 +31,13 @@ export class UDPService extends EventEmitter {
         this.emit(UDPService.STATES.UDP_STATE_READY);
     }
 
-    #handleMessage(msg: Buffer, remotePeer: RemoteInfo){
-        console.log(msg.toString('utf-8'), remotePeer);
+    #handleMessage(msg: Buffer, sender: RemoteInfo){
         try {
             const message: TUDPMessage = JSON.parse(msg.toString('utf-8'));
             if (!isValidMessage(message)) throw new Error('Message malformed');
             const [ messageType, payload, messageId ] = message;
             const isAck = ['RESULT_OK', 'RESULT_ERROR'].includes(messageType);
-            this.emit(isAck ? messageId : messageType, { payload, messageId })
+            this.emit(isAck ? messageId : messageType.toUpperCase(), { payload, messageId, sender, messageType })
 
         } catch (e) {
             console.error({ e })
@@ -47,24 +46,33 @@ export class UDPService extends EventEmitter {
     }
 
     public broadcast(port: number, messageType: TUDPMessageType, payload?: Object){
-        this.#send(UDP_BROADCAST_ADDRESS, port, messageType, payload)
+        return this.#send(UDP_BROADCAST_ADDRESS, port, messageType, payload );
     }
 
-    async #send(address: string, port: number, messageType: TUDPMessageType, payload?: any){
+    async #send(
+            address: string,
+            port: number, 
+            messageType: TUDPMessageType, 
+            payload?: any, 
+            ackFor?: TMessageID
+            ){
         const payloadOffset = 0;
-        const messageId = randomUUID();
+        const messageId = ackFor ?? randomUUID()
         const message: TUDPMessage = [ messageType.toUpperCase(), payload, messageId ]
         const serializedPayload = JSON.stringify(message);
         return new Promise((resolve, reject) => {
-            // const failureTimeout = setTimeout(() => {
-            //     reject('Timeout')
-            // }, UDP_RPC_TIMEOUT_MSEC);
-            const successHandler = (payload: any) => {
-                console.log({ payload })
-                resolve;
+            if (ackFor) {
+                resolve(null);
             }
-
-            this.once<string>(messageId, successHandler);
+            let failureTimeout = setTimeout(() => {
+                reject('Timeout')
+            }, UDP_RPC_TIMEOUT_MSEC);
+            const resultHandler = (payload: any) => {
+                const isError = payload.messageType === 'RESULT_ERROR';
+                clearTimeout(failureTimeout);
+                isError ? reject(payload) : resolve(payload);
+            }
+            this.once<string>(messageId, resultHandler);
 
             this.#socket.send(
                 serializedPayload,
@@ -75,9 +83,26 @@ export class UDPService extends EventEmitter {
         })
     }
 
-    public async callRemoteFunction(client: TClientId){}
+    public async callRemoteFunction(address: string, port: number, functionName: string, args: any): Promise<any>{
+        return this.#send(address, port, 'callFunction', [ functionName, args])
+    }
 
-    public addMessageListener(){
-
+    public addMessageHandler(messageType: string, handler: TUDPMessageHandler){
+        this.addListener(messageType.toUpperCase(), async (event: TUDPMessageEventPayload ) => {
+            const  { sender, payload, messageId } = event;
+            let responseType = 'RESULT_OK';
+            let responsePayload: any = null;
+            try {
+                responsePayload = await handler(payload, sender);
+            } catch (error: any) {
+                responseType = 'RESULT_ERROR'
+                responsePayload = { message: error?.message ?? error }
+            }
+            try {
+                await this.#send(sender.address, sender.port, responseType, responsePayload, messageId )
+            } catch (e) {
+                console.error({e});
+            }
+        })
     }
 }

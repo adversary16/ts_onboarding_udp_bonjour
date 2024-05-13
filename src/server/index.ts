@@ -1,9 +1,9 @@
-import { UDP_SERVICE_SERVER_PORT } from "../shared/config";
+import { restServer } from "./services/http";
 import { udpService } from "./services/udp";
 
 async function bootstrap(){
     const service = udpService;
-    service.broadcast(UDP_SERVICE_SERVER_PORT + 1, 'lol')
+    restServer.listen(3005)
 }
 
 bootstrap().catch((error: Error) => {

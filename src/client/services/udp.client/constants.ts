@@ -1,4 +1,5 @@
 export enum UDP_CLIENT_STATES {
+    INITIAL,
     SEARCHING,
     CONNECTED
 }
