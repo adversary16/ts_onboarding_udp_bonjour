@@ -1,0 +1,1 @@
+export type TRPCRandomNumberArgs = { min?: number, max?: number }

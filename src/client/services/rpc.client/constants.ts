@@ -1,0 +1,8 @@
+export const RPC_FUNCTION_RANDOMIZATION_PROBABILITY = 0.75;
+
+
+export const RPC_METHOD_PREFIX = 'RPC';
+export const RPC_RANDOM_DEFAULT_MIN = 0;
+export const RPC_RANDOM_DEFAULT_MAX = 100;
+
+export const RPC_HDD_SPEED_FILE_SIZE_BYTES = 1024 * 1024;

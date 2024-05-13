@@ -3,17 +3,38 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
   "scripts": {
     "client-dev": "tsx --watch src/client",
     "server-dev": "tsx --watch src/server",
+    "dev": "concurrently \"npm run client-dev\" \"npm run server-dev\"",
+    "prestart": "tsc",
+    "server": "node ./dist/server",
+    "client": "node ./dist/client",
+    "start": "concurrently \"npm run client\" \"npm run server\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "express": "4.19.2"
+  },
   "devDependencies": {
+    "@eslint/js": "^9.2.0",
+    "@types/express": "4.17.21",
     "@types/node": "20.12.10",
-    "express": "4.19.2",
+    "@typescript-eslint/eslint-plugin": "7.9.0",
+    "@typescript-eslint/parser": "7.9.0",
+    "concurrently": "8.2.2",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "globals": "^15.2.0",
+    "prettier": "3.2.5",
     "tsx": "4.9.3",
-    "typescript": "5.4.5"
+    "typescript": "5.4.5",
+    "typescript-eslint": "^7.9.0"
   }
 }
