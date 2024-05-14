@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import { RemoteInfo, createSocket } from "dgram";
 import EventEmitter from "events";
 import { UDP_SERVICE_SERVER_PORT, UDP_SERVICE_SOCKET_TYPE } from "../../config";
-import { UDP_BROADCAST_ADDRESS, UDP_RPC_TIMEOUT_MSEC, UDP_STATE } from "../../constants";
+import { UDP_BROADCAST_ADDRESS, UDP_PROTOCOL_MESSAGES, UDP_RPC_TIMEOUT_MSEC, UDP_STATE } from "../../constants";
 import { TMessageID, TUDPMessage, TUDPMessageEventPayload, TUDPMessageHandler, TUDPMessageType, isValidMessage } from "../../types";
 
 export class UDPService extends EventEmitter {
@@ -36,7 +36,7 @@ export class UDPService extends EventEmitter {
             const message: TUDPMessage = JSON.parse(msg.toString('utf-8'));
             if (!isValidMessage(message)) throw new Error('Message malformed');
             const [ messageType, payload, messageId ] = message;
-            const isAck = ['RESULT_OK', 'RESULT_ERROR'].includes(messageType);
+            const isAck = [UDP_PROTOCOL_MESSAGES.RESPONSE_OK, UDP_PROTOCOL_MESSAGES.RESPONSE_ERROR].includes(messageType);
             this.emit(isAck ? messageId : messageType.toUpperCase(), { payload, messageId, sender, messageType })
 
         } catch (e) {
@@ -58,7 +58,7 @@ export class UDPService extends EventEmitter {
             ){
         const payloadOffset = 0;
         const messageId = ackFor ?? randomUUID()
-        const message: TUDPMessage = [ messageType.toUpperCase(), payload, messageId ]
+        const message: TUDPMessage = [ messageType, payload, messageId ]
         const serializedPayload = JSON.stringify(message);
         return new Promise((resolve, reject) => {
             if (ackFor) {
@@ -68,7 +68,7 @@ export class UDPService extends EventEmitter {
                 reject('Timeout')
             }, UDP_RPC_TIMEOUT_MSEC);
             const resultHandler = (payload: any) => {
-                const isError = payload.messageType === 'RESULT_ERROR';
+                const isError = payload.messageType === UDP_PROTOCOL_MESSAGES.RESPONSE_ERROR;
                 clearTimeout(failureTimeout);
                 isError ? reject(payload) : resolve(payload);
             }
@@ -84,18 +84,18 @@ export class UDPService extends EventEmitter {
     }
 
     public async callRemoteFunction(address: string, port: number, functionName: string, args: any): Promise<any>{
-        return this.#send(address, port, 'callFunction', [ functionName, args])
+        return this.#send(address, port, UDP_PROTOCOL_MESSAGES.CALLRPC, [ functionName, args])
     }
 
     public addMessageHandler(messageType: string, handler: TUDPMessageHandler){
         this.addListener(messageType.toUpperCase(), async (event: TUDPMessageEventPayload ) => {
             const  { sender, payload, messageId } = event;
-            let responseType = 'RESULT_OK';
+            let responseType = UDP_PROTOCOL_MESSAGES.RESPONSE_OK;
             let responsePayload: any = null;
             try {
                 responsePayload = await handler(payload, sender);
             } catch (error: any) {
-                responseType = 'RESULT_ERROR'
+                responseType = UDP_PROTOCOL_MESSAGES.RESPONSE_ERROR;
                 responsePayload = { message: error?.message ?? error }
             }
             try {

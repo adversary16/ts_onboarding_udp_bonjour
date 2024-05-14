@@ -3,6 +3,7 @@ import { readFileSync } from "fs";
 import { resolve } from "path";
 import { UDPService } from "../../../shared/classes/udp.class";
 import { UDP_SERVICE_SERVER_PORT } from "../../../shared/config";
+import { UDP_PROTOCOL_MESSAGES } from "../../../shared/constants";
 import { rpcClientService } from "../rpc.client";
 import { UDP_BEACON_TIMEOUT_MSEC, UDP_CLIENT_LOGO_PATH, UDP_CLIENT_STATES } from "./constants";
 
@@ -49,7 +50,7 @@ class UDPClientService extends UDPService {
     async #hello(){
         try {
         const payload = { clientId: this.CLIENT_ID, capacities: rpcClientService.capacities, logo: this.#logo };
-        await this.broadcast(UDP_SERVICE_SERVER_PORT, 'hello', payload);
+        await this.broadcast(UDP_SERVICE_SERVER_PORT, UDP_PROTOCOL_MESSAGES.HELLO, payload);
         console.log('connected')
         } catch (e) { 
             throw e
@@ -57,7 +58,7 @@ class UDPClientService extends UDPService {
     }
 
     async #heartbeat() {
-        await this.broadcast(UDP_SERVICE_SERVER_PORT, 'heartbeat', { clientId: this.CLIENT_ID });
+        await this.broadcast(UDP_SERVICE_SERVER_PORT, UDP_PROTOCOL_MESSAGES.HEARTBEAT, { clientId: this.CLIENT_ID });
     }
 }
 

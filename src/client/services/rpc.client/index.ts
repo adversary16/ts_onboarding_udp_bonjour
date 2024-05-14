@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { writeFile } from "fs/promises";
 import { freemem, tmpdir } from "os";
 import { resolve } from "path";
+import { UDP_PROTOCOL_MESSAGES } from "../../../shared/constants";
 import { udpClientService } from "../udp.client";
 import { TRPCRandomNumberArgs } from "./types";
 
@@ -32,7 +33,7 @@ class RPCClientService {
             }
         }
 
-        udpClientService.addMessageHandler('callfunction', (payload, sender) => {
+        udpClientService.addMessageHandler(UDP_PROTOCOL_MESSAGES.CALLRPC, (payload, sender) => {
             const [ remoteFunctionName, functionArgs ] = payload;
             return this.callRpcFunction.call(this, remoteFunctionName, functionArgs);
         })

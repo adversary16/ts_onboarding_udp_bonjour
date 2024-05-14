@@ -1,9 +1,10 @@
 import { UUID } from "crypto"
 import { RemoteInfo } from "dgram"
+import { UDP_PROTOCOL_MESSAGES } from "./constants"
 
 export type TUDPServerCommand = ''
 
-export type TUDPMessageType = string
+export type TUDPMessageType = UDP_PROTOCOL_MESSAGES
 
 export type TUDPRpcCallSuccess = {
 

@@ -1,6 +1,7 @@
 import { RemoteInfo } from "dgram";
 import { UDP_BEACON_TIMEOUT_MSEC } from "../../../client/services/udp.client/constants";
 import { UDPService } from "../../../shared/classes/udp.class";
+import { UDP_PROTOCOL_MESSAGES } from "../../../shared/constants";
 import { TClientId, TUDPHeartbeatPayload, TUDPHelloPayload } from "../../../shared/types";
 import { TClientInfo } from "./types";
 
@@ -27,8 +28,8 @@ class UDPServerService extends UDPService {
     }
 
     #init(){
-        this.addMessageHandler('HELLO', this.#registerClient.bind(this));
-        this.addMessageHandler('HEARTBEAT', this.#updateHeartBeat.bind(this));
+        this.addMessageHandler(UDP_PROTOCOL_MESSAGES.HELLO, this.#registerClient.bind(this));
+        this.addMessageHandler(UDP_PROTOCOL_MESSAGES.HEARTBEAT, this.#updateHeartBeat.bind(this));
         setInterval(this.#cleanup.bind(this), UDP_BEACON_TIMEOUT_MSEC)
     }
 
