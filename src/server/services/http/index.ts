@@ -1,5 +1,5 @@
 import { default as express } from 'express';
-import { baseRouter } from '../../controllers';
+import { baseRouter } from '../../routes';
 
 const app = express();
 

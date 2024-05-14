@@ -4,16 +4,10 @@ import { freemem, tmpdir } from "os";
 import { resolve } from "path";
 import { UDP_PROTOCOL_MESSAGES } from "../../../shared/constants";
 import { udpClientService } from "../udp.client";
+import { RPC_FUNCTION_RANDOMIZATION_PROBABILITY, RPC_HDD_SPEED_FILE_SIZE_BYTES, RPC_METHOD_PREFIX, RPC_RANDOM_DEFAULT_MAX, RPC_RANDOM_DEFAULT_MIN } from "./constants";
 import { TRPCRandomNumberArgs } from "./types";
 
-const FUNCTION_RANDOMIZATION_PROBABILITY = 0.75;
 
-
-const RPC_METHOD_PREFIX = 'RPC' as const;
-const RPC_RANDOM_DEFAULT_MIN = 0;
-const RPC_RANDOM_DEFAULT_MAX = 100;
-
-const RPC_HDD_SPEED_FILE_SIZE_BYTES = 1024 * 1024;
 
 class RPCClientService {
     #capacities: string[] = [];
@@ -27,7 +21,7 @@ class RPCClientService {
         
         // randomize exposed capacities
         for (let i = 0; i < rpcFunctions.length; i++) {
-            const fnIndex = Math.floor(Math.random() * rpcFunctions.length / FUNCTION_RANDOMIZATION_PROBABILITY);
+            const fnIndex = Math.floor(Math.random() * rpcFunctions.length / RPC_FUNCTION_RANDOMIZATION_PROBABILITY);
             if (rpcFunctions[fnIndex] && !this.#capacities.includes(rpcFunctions[fnIndex])) {
                 this.#capacities.push(rpcFunctions[fnIndex]);
             }
