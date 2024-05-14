@@ -11,6 +11,13 @@ class UDPServerService extends UDPService {
         this.on(UDPService.STATES.UDP_STATE_READY, this.#init.bind(this))
     }
 
+    getClientDescription(clientId: TClientId) {
+        const clientDescription = this.#clients.get(clientId);
+        if (!clientDescription) throw new Error('No such client');
+        const { logo, capacities } = clientDescription;
+        return { logo, capacities, id: clientId }
+    }
+
     get clients(): any[] {
         const clientDTO = <any>[]
         for (const [id, { capacities }] of this.#clients) {
@@ -27,8 +34,8 @@ class UDPServerService extends UDPService {
 
     #registerClient(registrationPayload: TUDPHelloPayload, sender: RemoteInfo):void {
         const timestamp = Date.now();
-        const { clientId, capacities } = registrationPayload;
-        this.#clients.set(clientId, { ...sender, capacities, lastHeartbeat: timestamp})
+        const { clientId, capacities, logo } = registrationPayload;
+        this.#clients.set(clientId, { ...sender, capacities, lastHeartbeat: timestamp, logo })
         console.log('Client with', clientId, 'connected from', sender.address)
     }
 

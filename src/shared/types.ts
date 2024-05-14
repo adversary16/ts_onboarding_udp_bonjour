@@ -16,7 +16,7 @@ export type TMessageID = UUID
 
 export type TUDPMessage = [ TUDPMessageType, any, TMessageID ]
 
-export type TUDPHelloPayload = { clientId: TClientId, capacities: string[] } 
+export type TUDPHelloPayload = { clientId: TClientId, capacities: string[], logo?: string } 
 export type TUDPHeartbeatPayload = { clientId: TClientId }
 
 export const isValidMessage = (message: any): message is TUDPMessage => {

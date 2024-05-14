@@ -10,7 +10,14 @@ router.get('/', (req: Request, res: Response) => {
 })
 
 router.get('/:clientId', (req: Request, res: Response) => {
-    res.status(200).json({});
+    const { clientId } = req.params;
+   try {
+    const description = udpService.getClientDescription(clientId as TClientId);
+        res.status(200).json(description);
+    } catch (e) {
+        res.status(500).json(e);
+    }
+
 });
 
 router.get('/:clientId/:functionName', async (req: Request, res: Response) => {

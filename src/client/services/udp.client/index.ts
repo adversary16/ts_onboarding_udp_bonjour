@@ -1,12 +1,15 @@
 import { randomUUID } from "crypto";
+import { readFileSync } from "fs";
+import { resolve } from "path";
 import { UDPService } from "../../../shared/classes/udp.class";
 import { UDP_SERVICE_SERVER_PORT } from "../../../shared/config";
 import { rpcClientService } from "../rpc.client";
-import { UDP_BEACON_TIMEOUT_MSEC, UDP_CLIENT_STATES } from "./constants";
+import { UDP_BEACON_TIMEOUT_MSEC, UDP_CLIENT_LOGO_PATH, UDP_CLIENT_STATES } from "./constants";
 
 class UDPClientService extends UDPService {
     #state: UDP_CLIENT_STATES = UDP_CLIENT_STATES.INITIAL;
     #beaconLoop?: NodeJS.Timeout
+    #logo?: string
     public readonly CLIENT_ID = '4d67323a-dd68-40a7-bf7f-354c68d64ce3' ?? randomUUID();
 
     constructor(port: number){
@@ -14,8 +17,17 @@ class UDPClientService extends UDPService {
         this.on(UDPService.STATES.UDP_STATE_READY, this.#init.bind(this))
     }
 
+    #loadLogo(){
+        try {
+            this.#logo = readFileSync(resolve(UDP_CLIENT_LOGO_PATH), { encoding: 'base64'});
+        } catch {
+            console.warn('logo not found')
+        }
+    }
+    
     #init(){
         this.#startBeacon();
+        this.#loadLogo();
     }
 
     async #startBeacon(){
@@ -36,7 +48,7 @@ class UDPClientService extends UDPService {
 
     async #hello(){
         try {
-        const payload = { clientId: this.CLIENT_ID, capacities: rpcClientService.capacities };
+        const payload = { clientId: this.CLIENT_ID, capacities: rpcClientService.capacities, logo: this.#logo };
         await this.broadcast(UDP_SERVICE_SERVER_PORT, 'hello', payload);
         console.log('connected')
         } catch (e) { 

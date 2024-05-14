@@ -1,3 +1,7 @@
+import { randomUUID } from "crypto";
+import { writeFile } from "fs/promises";
+import { freemem, tmpdir } from "os";
+import { resolve } from "path";
 import { udpClientService } from "../udp.client";
 import { TRPCRandomNumberArgs } from "./types";
 
@@ -7,6 +11,8 @@ const FUNCTION_RANDOMIZATION_PROBABILITY = 0.75;
 const RPC_METHOD_PREFIX = 'RPC' as const;
 const RPC_RANDOM_DEFAULT_MIN = 0;
 const RPC_RANDOM_DEFAULT_MAX = 100;
+
+const RPC_HDD_SPEED_FILE_SIZE_BYTES = 1024 * 1024;
 
 class RPCClientService {
     #capacities: string[] = [];
@@ -52,12 +58,17 @@ class RPCClientService {
         return Math.trunc(Math.random() * max + min);
     }
 
-    RPChddSpeed(){
-
+    async RPChddSpeed() {
+        const startTime = performance.now();
+        const testFilePath = resolve(tmpdir(), 'tmp' + randomUUID());
+        const testFileContents = Buffer.alloc(RPC_HDD_SPEED_FILE_SIZE_BYTES).fill(1);
+        await writeFile(testFilePath, testFileContents)
+        const endTime = performance.now();
+        return endTime - startTime;
     }
 
     RPCclientFreeMemory(){
-        
+        return freemem()
     }
 }
 
