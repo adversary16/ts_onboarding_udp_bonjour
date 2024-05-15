@@ -3,9 +3,18 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
   "scripts": {
     "client-dev": "tsx --watch src/client",
     "server-dev": "tsx --watch src/server",
+    "dev": "concurrently \"npm run client-dev\" \"npm run server-dev\"",
+    "prestart": "tsc",
+    "server": "node ./dist/server",
+    "client": "node ./dist/client",
+    "start": "concurrently \"npm run client\" \"npm run server\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -19,6 +28,7 @@
     "@types/node": "20.12.10",
     "@typescript-eslint/eslint-plugin": "7.9.0",
     "@typescript-eslint/parser": "7.9.0",
+    "concurrently": "8.2.2",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "globals": "^15.2.0",

@@ -21,6 +21,12 @@ export type TUDPHelloPayload = {
 };
 export type TUDPHeartbeatPayload = { clientId: TClientId };
 
+export const isClientId = (idString: string): idString is TClientId => {
+  return !!idString.match(
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/
+  );
+};
+
 export const isValidMessage = (message: any): message is TUDPMessage => {
   return (
     Array.isArray(message) &&
