@@ -52,8 +52,10 @@ class UDPClientService extends UDPService {
       const wasServerAlive =
         lastInterationState === UDP_CLIENT_STATES.CONNECTED;
       this.#state = UDP_CLIENT_STATES.SEARCHING;
-      if (wasServerAlive) beaconTimeout = 0;
-      console.log("Server unreachable, reannouncing", e);
+      if (wasServerAlive) {
+        beaconTimeout = 0;
+        console.log("Server disconnected, retrying");
+      }
     }
     this.#beaconLoop = setTimeout(this.#startBeacon.bind(this), beaconTimeout);
   }
