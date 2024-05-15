@@ -1,11 +1,8 @@
-import { createHash } from "crypto";
 import { Request, Response } from "express";
 import { existsSync, readFileSync, statSync } from "fs";
 import { join, resolve } from "path";
-import {
-  KEYPROTECTED_HASH_ALGORITHM,
-  KEYPROTECTED_KEY_FILE_NAME,
-} from "./constants";
+import { hashString } from "../../utils";
+import { KEYPROTECTED_KEY_FILE_NAME } from "./constants";
 import {
   KEYPROTECTED_ERROR_KEYFILE_MISSING,
   KEYPROTECTED_ERROR_WRONG_PASSWORD,
@@ -29,9 +26,6 @@ const getKeyString = (keyPath: string) => {
     throw KEYPROTECTED_ERROR_KEYFILE_MISSING;
   }
 };
-
-const hashString = (openString: string) =>
-  createHash(KEYPROTECTED_HASH_ALGORITHM).update(openString).digest("hex");
 
 export function KeyProtected(keyPath: string) {
   const keyHash = hashString(getKeyString(keyPath));
