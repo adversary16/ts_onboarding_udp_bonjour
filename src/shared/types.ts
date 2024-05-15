@@ -6,13 +6,17 @@ export type TUDPServerCommand = "";
 
 export type TUDPMessageType = UDP_PROTOCOL_MESSAGES;
 
+export type TUDPAckResponse =
+  | UDP_PROTOCOL_MESSAGES.RESPONSE_ERROR
+  | UDP_PROTOCOL_MESSAGES.RESPONSE_OK;
+
 export type TUDPRpcCallSuccess = {};
 export type TUDPClientResponse = "";
 
 export type TClientId = UUID;
 export type TMessageID = UUID;
 
-export type TUDPMessage = [TUDPMessageType, any, TMessageID];
+export type TUDPMessage = [messageType: TUDPMessageType, any, TMessageID];
 
 export type TUDPHelloPayload = {
   clientId: TClientId;

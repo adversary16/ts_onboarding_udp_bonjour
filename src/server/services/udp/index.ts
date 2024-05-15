@@ -87,13 +87,13 @@ class UDPServerService extends UDPService {
     }
   }
 
-  callRPCFunction(clientId: TClientId, functionName: string, args: any) {
+  callRPCFunction<T>(clientId: TClientId, functionName: string, args: any) {
     const calledClient = this.#clients.get(clientId);
     if (!calledClient) throw UDP_ERROR_CLIENT_NOT_FOUND;
     if (!calledClient.capacities.includes(functionName))
       throw RPC_ERROR_NO_SUCH_FUNCTION;
     const { address, port } = calledClient;
-    return this.callRemoteFunction(address, port, functionName, args);
+    return this.callRemoteFunction<T>(address, port, functionName, args);
   }
 }
 

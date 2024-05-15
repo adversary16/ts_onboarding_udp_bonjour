@@ -74,20 +74,20 @@ export class UDPService extends EventEmitter {
     return this.#send(UDP_BROADCAST_ADDRESS, port, messageType, payload);
   }
 
-  async #send(
+  async #send<SuccessResultType>(
     address: string,
     port: number,
     messageType: TUDPMessageType,
     payload?: any,
     ackFor?: TMessageID
-  ) {
+  ): Promise<SuccessResultType | void> {
     const payloadOffset = 0;
     const messageId = ackFor ?? randomUUID();
     const message: TUDPMessage = [messageType, payload, messageId];
     const serializedPayload = JSON.stringify(message);
-    return new Promise((resolve, reject) => {
+    return new Promise<SuccessResultType | void>((resolve, reject) => {
       if (ackFor) {
-        resolve(null);
+        resolve();
       }
       let failureTimeout = setTimeout(() => {
         reject("Timeout");
@@ -96,7 +96,7 @@ export class UDPService extends EventEmitter {
         const isError =
           payload.messageType === UDP_PROTOCOL_MESSAGES.RESPONSE_ERROR;
         clearTimeout(failureTimeout);
-        isError ? reject(payload) : resolve(payload);
+        isError ? reject(payload) : resolve(<SuccessResultType>payload);
       };
       this.once<string>(messageId, resultHandler);
 
@@ -110,13 +110,13 @@ export class UDPService extends EventEmitter {
     });
   }
 
-  public async callRemoteFunction(
+  public async callRemoteFunction<T>(
     address: string,
     port: number,
     functionName: string,
     args: any
   ): Promise<any> {
-    return this.#send(address, port, UDP_PROTOCOL_MESSAGES.CALLRPC, [
+    return this.#send<T>(address, port, UDP_PROTOCOL_MESSAGES.CALLRPC, [
       functionName,
       args,
     ]);
