@@ -2,6 +2,7 @@ import { RemoteInfo } from "dgram";
 import { UDP_BEACON_TIMEOUT_MSEC } from "../../../client/services/udp.client/constants";
 import { UDPService } from "../../../shared/classes/udp.class";
 import { UDP_PROTOCOL_MESSAGES } from "../../../shared/constants";
+import { TimeoutError } from "../../../shared/errors";
 import {
   TClientId,
   TUDPHeartbeatPayload,
@@ -87,13 +88,30 @@ class UDPServerService extends UDPService {
     }
   }
 
-  callRPCFunction<T>(clientId: TClientId, functionName: string, args: any) {
+  async callRPCFunction<T>(
+    clientId: TClientId,
+    functionName: string,
+    args: any
+  ) {
     const calledClient = this.#clients.get(clientId);
     if (!calledClient) throw UDP_ERROR_CLIENT_NOT_FOUND;
     if (!calledClient.capacities.includes(functionName))
       throw RPC_ERROR_NO_SUCH_FUNCTION;
     const { address, port } = calledClient;
-    return this.callRemoteFunction<T>(address, port, functionName, args);
+    try {
+      return await this.callRemoteFunction<T>(
+        address,
+        port,
+        functionName,
+        args
+      );
+    } catch (e) {
+      if (e instanceof TimeoutError) {
+        this.#clients.delete(clientId);
+        console.log("Client with", clientId, "was purged for timeout");
+      }
+      throw e;
+    }
   }
 }
 

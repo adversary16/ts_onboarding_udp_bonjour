@@ -24,3 +24,5 @@ export class RpcError extends Error {
     super(message);
   }
 }
+
+export class TimeoutError extends Error {}

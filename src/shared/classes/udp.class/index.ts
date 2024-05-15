@@ -8,7 +8,7 @@ import {
   UDP_RPC_TIMEOUT_MSEC,
   UDP_STATE,
 } from "../../constants";
-import { UdpError } from "../../errors";
+import { TimeoutError, UdpError } from "../../errors";
 import {
   TMessageID,
   TUDPMessage,
@@ -90,7 +90,7 @@ export class UDPService extends EventEmitter {
         resolve();
       }
       let failureTimeout = setTimeout(() => {
-        reject("Timeout");
+        reject(new TimeoutError("Peer timed out to respond"));
       }, UDP_RPC_TIMEOUT_MSEC);
       const resultHandler = (payload: any) => {
         const isError =

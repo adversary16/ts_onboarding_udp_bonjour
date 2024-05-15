@@ -40,7 +40,7 @@ class UDPClientService extends UDPService {
   async #startBeacon() {
     let beaconTimeout =
       this.#state === UDP_CLIENT_STATES.INITIAL ? 0 : UDP_BEACON_TIMEOUT_MSEC;
-
+    const lastInterationState = this.#state;
     try {
       const beaconFunction =
         this.#state === UDP_CLIENT_STATES.CONNECTED
@@ -49,7 +49,8 @@ class UDPClientService extends UDPService {
       await beaconFunction.call(this);
       this.#state = UDP_CLIENT_STATES.CONNECTED;
     } catch (e) {
-      const wasServerAlive = this.#state === UDP_CLIENT_STATES.CONNECTED;
+      const wasServerAlive =
+        lastInterationState === UDP_CLIENT_STATES.CONNECTED;
       this.#state = UDP_CLIENT_STATES.SEARCHING;
       if (wasServerAlive) beaconTimeout = 0;
       console.log("Server unreachable, reannouncing", e);
