@@ -1,0 +1,5 @@
+./assets
+key.txt
+.*ignore
+*.json
+*.config.mjs
